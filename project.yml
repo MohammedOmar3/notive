@@ -1,0 +1,79 @@
+name: Notive
+options:
+  bundleIdPrefix: com.notive
+  deploymentTarget:
+    iOS: "18.0"
+  defaultConfig: Debug
+  generateEmptyDirectories: true
+  groupSortPosition: top
+  transitivelyLinkDependencies: true
+
+settings:
+  base:
+    SWIFT_VERSION: 5.9
+    SWIFT_STRICT_CONCURRENCY: complete
+    MARKETING_VERSION: 1.0.0
+    CURRENT_PROJECT_VERSION: 1
+    IPHONEOS_DEPLOYMENT_TARGET: 18.0
+    ENABLE_PREVIEWS: YES
+  configs:
+    Debug:
+      DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+    Release:
+      DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+      SWIFT_OPTIMIZATION_LEVEL: -O
+
+targets:
+  Notive:
+    type: application
+    platform: iOS
+    sources:
+      - path: Notive
+        excludes:
+          - "**/*.md"
+    info:
+      path: Notive/Info.plist
+      properties:
+        CFBundleDisplayName: Notive
+        CFBundleName: Notive
+        UILaunchScreen:
+          UIColorName: ""
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSMicrophoneUsageDescription: "Notive needs microphone access to record voice notes."
+        ITSAppUsesNonExemptEncryption: false
+        UIApplicationSupportsIndirectInputEvents: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.notive.app
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: ""
+    dependencies:
+      - package: SQLiteSwift
+        product: SQLite
+
+  NotiveTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: NotiveTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.notive.app.tests
+        TEST_HOST: ""
+        BUNDLE_LOADER: ""
+    dependencies:
+      - target: Notive
+      - package: SQLiteSwift
+        product: SQLite
+
+packages:
+  SQLiteSwift:
+    url: https://github.com/stephencelis/SQLite.swift
+    from: 0.15.3
