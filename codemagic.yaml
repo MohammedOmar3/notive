@@ -12,11 +12,12 @@ workflows:
         #   FIREBASE_APP_ID  — e.g. 1:123456789:ios:abcdef123456
         #   FIREBASE_TOKEN   — from `firebase login:ci`
         - firebase_credentials
-        # signing_credentials (add once Apple Developer account is ready):
+        # Uncomment once Apple Developer account + signing credentials are configured
+        # in Codemagic UI → Team → Environment variable groups:
         #   CERTIFICATE_PRIVATE_KEY  — base64-encoded .p12
         #   CERTIFICATE_PASSWORD     — .p12 password
         #   PROVISIONING_PROFILE     — base64-encoded .mobileprovision
-        - signing_credentials
+        # - signing_credentials
       vars:
         XCODE_SCHEME: "Notive"
         BUNDLE_ID: "com.notive.app"
@@ -62,42 +63,57 @@ workflows:
             | xcpretty --color
         test_report: TestResults.xcresult
 
-      - name: Set up code signing
+      - name: Build (unsigned — signing not yet configured)
         script: |
-          keychain initialize
-          echo "$CERTIFICATE_PRIVATE_KEY" | base64 --decode > /tmp/certificate.p12
-          keychain add-certificates --certificate /tmp/certificate.p12 \
-            --certificate-password "$CERTIFICATE_PASSWORD"
-          echo "$PROVISIONING_PROFILE" | base64 --decode > /tmp/profile.mobileprovision
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp /tmp/profile.mobileprovision \
-            ~/Library/MobileDevice/Provisioning\ Profiles/notive.mobileprovision
-
-      - name: Build archive
-        script: |
-          xcodebuild archive \
+          xcodebuild build \
             -project Notive.xcodeproj \
             -scheme "$XCODE_SCHEME" \
             -sdk iphoneos \
-            -archivePath Notive.xcarchive \
+            -destination "generic/platform=iOS" \
             -clonedSourcePackagesDirPath SourcePackages \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color
 
-      - name: Export IPA
-        script: |
-          xcodebuild -exportArchive \
-            -archivePath Notive.xcarchive \
-            -exportPath Notive.ipa \
-            -exportOptionsPlist ExportOptions.plist
-
-      - name: Upload to Firebase App Distribution
-        script: |
-          npm install -g firebase-tools
-          firebase appdistribution:distribute Notive.ipa/Notive.ipa \
-            --app "$FIREBASE_APP_ID" \
-            --token "$FIREBASE_TOKEN" \
-            --groups "testers" \
-            --release-notes "Build $BUILD_NUMBER — $CM_COMMIT"
+      # ── Uncomment the steps below once signing_credentials is configured ──────
+      #
+      # - name: Set up code signing
+      #   script: |
+      #     keychain initialize
+      #     echo "$CERTIFICATE_PRIVATE_KEY" | base64 --decode > /tmp/certificate.p12
+      #     keychain add-certificates --certificate /tmp/certificate.p12 \
+      #       --certificate-password "$CERTIFICATE_PASSWORD"
+      #     echo "$PROVISIONING_PROFILE" | base64 --decode > /tmp/profile.mobileprovision
+      #     mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+      #     cp /tmp/profile.mobileprovision \
+      #       ~/Library/MobileDevice/Provisioning\ Profiles/notive.mobileprovision
+      #
+      # - name: Build archive
+      #   script: |
+      #     xcodebuild archive \
+      #       -project Notive.xcodeproj \
+      #       -scheme "$XCODE_SCHEME" \
+      #       -sdk iphoneos \
+      #       -archivePath Notive.xcarchive \
+      #       -clonedSourcePackagesDirPath SourcePackages \
+      #       | xcpretty --color
+      #
+      # - name: Export IPA
+      #   script: |
+      #     xcodebuild -exportArchive \
+      #       -archivePath Notive.xcarchive \
+      #       -exportPath Notive.ipa \
+      #       -exportOptionsPlist ExportOptions.plist
+      #
+      # - name: Upload to Firebase App Distribution
+      #   script: |
+      #     npm install -g firebase-tools
+      #     firebase appdistribution:distribute Notive.ipa/Notive.ipa \
+      #       --app "$FIREBASE_APP_ID" \
+      #       --token "$FIREBASE_TOKEN" \
+      #       --groups "testers" \
+      #       --release-notes "Build $BUILD_NUMBER — $CM_COMMIT"
 
     artifacts:
       - TestResults.xcresult
