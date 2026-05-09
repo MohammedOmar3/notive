@@ -40,7 +40,6 @@ Package.resolved
 *.safetensors
 *.pt
 *.pth
-models/
 
 # ── Audio files ───────────────────────────────────────────────────────────────
 *.m4a
